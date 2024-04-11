@@ -307,9 +307,6 @@ This can be useful for doing type-conversions on values that you don't want to f
 >>> o = C("1")
 >>> o.x
 1
->>> o.x = "2"
->>> o.x
-2
 ```
 
 Converters are run *before* validators, so you can use validators to check the final form of the value.
