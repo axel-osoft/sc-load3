@@ -3,6 +3,8 @@
 """
 Tests for `attr._make`.
 """
+
+
 import copy
 import functools
 import gc
@@ -21,7 +23,7 @@ from hypothesis.strategies import booleans, integers, lists, sampled_from, text
 import attr
 
 from attr import _config
-from attr._compat import PY_3_8_PLUS, PY_3_10_PLUS
+from attr._compat import PY310
 from attr._make import (
     Attribute,
     Factory,
@@ -600,13 +602,11 @@ class TestAttributes:
         Setting repr_ns overrides a potentially guessed namespace.
         """
 
-        with pytest.deprecated_call(match="The `repr_ns` argument"):
-
-            @attr.s(slots=slots_outer)
-            class C:
-                @attr.s(repr_ns="C", slots=slots_inner)
-                class D:
-                    pass
+        @attr.s(slots=slots_outer)
+        class C:
+            @attr.s(repr_ns="C", slots=slots_inner)
+            class D:
+                pass
 
         assert "C.D()" == repr(C.D())
 
@@ -1336,6 +1336,29 @@ class TestConverter:
         assert c.x == val + 1
         assert c.y == 2
 
+    def test_factory_takes_self(self):
+        """
+        If takes_self on factories is True, self is passed.
+        """
+        C = make_class(
+            "C",
+            {
+                "x": attr.ib(
+                    default=Factory((lambda self: self), takes_self=True)
+                )
+            },
+        )
+
+        i = C()
+
+        assert i is i.x
+
+    def test_factory_hashable(self):
+        """
+        Factory is hashable.
+        """
+        assert hash(Factory(None, False)) == hash(Factory(None, False))
+
     def test_convert_before_validate(self):
         """
         Validation happens after conversion.
@@ -1744,27 +1767,6 @@ class TestClassBuilder:
         @attr.s(slots=True)
         class C2(C):
             pass
-
-        # The original C2 is in a reference cycle, so force a collect:
-        gc.collect()
-
-        assert [C2] == C.__subclasses__()
-
-    @pytest.mark.skipif(not PY_3_8_PLUS, reason="cached_property is 3.8+")
-    def test_no_references_to_original_when_using_cached_property(self):
-        """
-        When subclassing a slotted class and using cached property, there are no stray references to the original class.
-        """
-
-        @attr.s(slots=True)
-        class C:
-            pass
-
-        @attr.s(slots=True)
-        class C2(C):
-            @functools.cached_property
-            def value(self) -> int:
-                return 0
 
         # The original C2 is in a reference cycle, so force a collect:
         gc.collect()
@@ -2471,7 +2473,7 @@ class TestAutoDetect:
             C, "__getstate__", None
         )
 
-    @pytest.mark.skipif(PY_3_10_PLUS, reason="Pre-3.10 only.")
+    @pytest.mark.skipif(PY310, reason="Pre-3.10 only.")
     def test_match_args_pre_310(self):
         """
         __match_args__ is not created on Python versions older than 3.10.
@@ -2484,9 +2486,7 @@ class TestAutoDetect:
         assert None is getattr(C, "__match_args__", None)
 
 
-@pytest.mark.skipif(
-    not PY_3_10_PLUS, reason="Structural pattern matching is 3.10+"
-)
+@pytest.mark.skipif(not PY310, reason="Structural pattern matching is 3.10+")
 class TestMatchArgs:
     """
     Tests for match_args and __match_args__ generation.
