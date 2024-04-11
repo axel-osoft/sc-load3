@@ -4,10 +4,10 @@
 Tests for methods from `attrib._cmp`.
 """
 
+
 import pytest
 
 from attr._cmp import cmp_using
-from attr._compat import PY_3_13_PLUS
 
 
 # Test parameters.
@@ -53,9 +53,6 @@ order_ids = [c[0].__name__ for c in order_data]
 
 cmp_data = eq_data + order_data
 cmp_ids = eq_ids + order_ids
-
-# Compiler strips indents from docstrings in Python 3.13+
-indent = "" if PY_3_13_PLUS else " " * 8
 
 
 class TestEqOrder:
@@ -328,7 +325,7 @@ class TestDundersUnnamedClass:
         method = self.cls.__ne__
         assert method.__doc__.strip() == (
             "Check equality and either forward a NotImplemented or\n"
-            f"{indent}return the result negated."
+            "        return the result negated."
         )
         assert method.__name__ == "__ne__"
 
@@ -396,7 +393,7 @@ class TestDundersPartialOrdering:
         method = self.cls.__ne__
         assert method.__doc__.strip() == (
             "Check equality and either forward a NotImplemented or\n"
-            f"{indent}return the result negated."
+            "        return the result negated."
         )
         assert method.__name__ == "__ne__"
 
@@ -468,7 +465,7 @@ class TestDundersFullOrdering:
         method = self.cls.__ne__
         assert method.__doc__.strip() == (
             "Check equality and either forward a NotImplemented or\n"
-            f"{indent}return the result negated."
+            "        return the result negated."
         )
         assert method.__name__ == "__ne__"
 
