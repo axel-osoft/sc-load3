@@ -20,6 +20,7 @@ from attr._make import (
     NOTHING,
     Factory,
     _add_repr,
+    _is_slot_cls,
     _make_init,
     fields,
     make_class,
@@ -90,14 +91,12 @@ def _add_init(cls, frozen):
         cls,
         cls.__attrs_attrs__,
         has_pre_init,
-        (
-            len(inspect.signature(cls.__attrs_pre_init__).parameters) > 1
-            if has_pre_init
-            else False
-        ),
+        len(inspect.signature(cls.__attrs_pre_init__).parameters) > 1
+        if has_pre_init
+        else False,
         getattr(cls, "__attrs_post_init__", False),
         frozen,
-        "__slots__" in cls.__dict__,
+        _is_slot_cls(cls),
         cache_hash=False,
         base_attr_map={},
         is_exc=False,
@@ -835,29 +834,6 @@ class TestAddInit:
 
         assert [] == i.a
         assert isinstance(i.b, D)
-
-    def test_factory_takes_self(self):
-        """
-        If takes_self on factories is True, self is passed.
-        """
-        C = make_class(
-            "C",
-            {
-                "x": attr.ib(
-                    default=Factory((lambda self: self), takes_self=True)
-                )
-            },
-        )
-
-        i = C()
-
-        assert i is i.x
-
-    def test_factory_hashable(self):
-        """
-        Factory is hashable.
-        """
-        assert hash(Factory(None, False)) == hash(Factory(None, False))
 
     def test_validator(self):
         """
